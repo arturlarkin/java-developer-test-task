@@ -1,11 +1,11 @@
 package com.example.java_developer_test_task.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,7 +31,22 @@ public class Department {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private Lector headOfDepartment;
 
-    @JsonIgnore
-    @ManyToMany(mappedBy = "departments", fetch = FetchType.LAZY)
+    @ManyToMany
+    @JoinTable(
+            name = "lector_department",
+            joinColumns = @JoinColumn(name = "department_id"),
+            inverseJoinColumns = @JoinColumn(name = "lector_id")
+    )
     private Set<Lector> lectors = new HashSet<>();
+
+    public void addLector(Lector lector) {
+        this.lectors.add(lector);
+        lector.getDepartments().add(this);
+    }
+
+    public void addLectors(Collection<Lector> lectors) {
+        for (Lector lector : lectors) {
+            addLector(lector);
+        }
+    }
 }

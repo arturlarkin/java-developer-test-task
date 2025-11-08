@@ -34,11 +34,8 @@ public class Lector {
     @Column(name = "salary")
     private Double salary;
 
+    @ManyToMany(mappedBy = "lectors")
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "lector_department",
-            joinColumns = @JoinColumn(name = "lector_id"),
-            inverseJoinColumns = @JoinColumn(name = "department_id"))
     private Set<Department> departments = new HashSet<>();
 
     public String getFullName() {

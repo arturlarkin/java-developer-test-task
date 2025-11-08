@@ -40,29 +40,37 @@ class ConsoleInterface implements CommandLineRunner {
     }
 
     private void handleCommand(String input) {
-        if (input.startsWith("Who is head of department")) {
-            String department = input.replace("Who is head of department", "").trim();
-            String head = departmentService.getHeadOfDepartment(department);
-            System.out.printf("Head of %s is %s%n", department, head);
+        String normalizedInput = input.replaceAll("[.,!?]", "").trim();
+        String lowerInput = normalizedInput.toLowerCase();
 
-        } else if (input.startsWith("Show") && input.contains("statistics")) {
-            String department = input.replace("Show", "").replace("statistics", "").trim();
-            Map<LectorDegree, Long> stats = departmentService.getStatistics(department);
+        if (lowerInput.startsWith("who is head of department")) {
+            String departmentName = normalizedInput.substring("Who is head of department".length()).trim();
+            String head = departmentService.getHeadOfDepartment(departmentName);
+            System.out.printf("Head of %s is %s%n", departmentName, head);
+
+        } else if (lowerInput.startsWith("show") && lowerInput.contains("statistics")) {
+            String departmentName = normalizedInput
+                    .replaceAll("(?i)show", "")
+                    .replaceAll("(?i)statistics", "")
+                    .trim();
+            Map<LectorDegree, Long> stats = departmentService.getStatistics(departmentName);
             stats.forEach((degree, count) ->
-                    System.out.printf("%s - %d%n", degree.name().toLowerCase().replace('_', ' '), count));
+                    System.out.printf("%s - %d%n", degree.name().toLowerCase()
+                            .replace('_', ' '), count));
 
-        } else if (input.startsWith("Show the average salary for the department")) {
-            String department = input.replace("Show the average salary for the department", "").trim();
-            double avg = departmentService.getAverageSalary(department);
-            System.out.printf("The average salary for the %s department is %.2f%n", department, avg);
+        } else if (lowerInput.startsWith("show the average salary for the department")) {
+            String departmentName = normalizedInput
+                    .substring("Show the average salary for the department".length()).trim();
+            double avg = departmentService.getAverageSalary(departmentName);
+            System.out.printf("The average salary for the %s department is $%.2f%n", departmentName, avg);
 
-        } else if (input.startsWith("Show count of employee for")) {
-            String department = input.replace("Show count of employee for", "").trim();
-            int count = departmentService.getEmployeeCount(department);
-            System.out.printf("The %s department has %d employee(s)%n", department, count);
+        } else if (lowerInput.startsWith("show count of employee for")) {
+            String departmentName = normalizedInput.substring("Show count of employee for".length()).trim();
+            int count = departmentService.getEmployeeCount(departmentName);
+            System.out.printf("The %s department has %d employee(s)%n", departmentName, count);
 
-        } else if (input.startsWith("Global search by")) {
-            String template = input.replace("Global search by", "").trim();
+        } else if (lowerInput.startsWith("global search by")) {
+            String template = normalizedInput.substring("Global search by".length()).trim();
             String names = lectorService.getNamesByTemplate(template);
             System.out.println(names);
 

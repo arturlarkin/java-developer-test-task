@@ -4,7 +4,6 @@ import com.example.java_developer_test_task.model.Department;
 import com.example.java_developer_test_task.model.Lector;
 import com.example.java_developer_test_task.model.LectorDegree;
 import com.example.java_developer_test_task.repository.DepartmentRepository;
-import com.example.java_developer_test_task.repository.LectorRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
-    private final LectorRepository lectorRepository;
     private final LectorService lectorService;
 
     @Override
@@ -28,8 +26,22 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public Department createDepartment(String name) {
+        List<Department> departments = getAllDepartments();
+
+        Set<String> existingNames = new HashSet<>();
+        for (Department dep : departments) {
+            existingNames.add(dep.getName());
+        }
+
+        String finalName = name;
+        int counter = 0;
+        while (existingNames.contains(finalName)) {
+            counter++;
+            finalName = name + counter;
+        }
+
         Department department = new Department();
-        department.setName(name);
+        department.setName(finalName);
         return departmentRepository.save(department);
     }
 
@@ -52,29 +64,24 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department = getDepartmentById(departmentId);
         Lector lector = lectorService.getLectorById(lectorId);
 
-        department.getLectors().add(lector);
-        lector.getDepartments().add(department);
-
+        department.addLector(lector);
         return departmentRepository.save(department);
     }
 
     @Transactional
     @Override
     public Department assignLectors(Long departmentId, List<Long> lectorIds) {
-        Department department = departmentRepository.findById(departmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Department not found"));
+        Department department = getDepartmentById(departmentId);
+
         if (lectorIds == null || lectorIds.isEmpty()) {
             throw new IllegalArgumentException("lectorIds cannot be null or empty");
         }
 
-        for (Long lectorId : lectorIds) {
-            Lector lector = lectorRepository.findById(lectorId)
-                    .orElseThrow(() -> new EntityNotFoundException("Lector not found"));
-            lector.getDepartments().add(department);
-            department.getLectors().add(lector);
-        }
+        List<Lector> lectors = lectorIds.stream()
+                .map(lectorService::getLectorById)
+                .toList();
 
-        lectorRepository.saveAll(department.getLectors());
+        department.addLectors(lectors);
         return departmentRepository.save(department);
     }
 
